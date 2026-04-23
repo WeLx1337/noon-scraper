@@ -1,128 +1,61 @@
-# Noon Scraper
+A modular Python-based scraper designed to extract regional product data from Noon.com. This project demonstrates clean modular logic, featuring a robust CLI for developers and a lightweight Flask web interface for quick data exports.
 
-This is a small Noon.com scraper built as a simple student project. It is not a big product—just a learning repo showing how to scrape a website, build a little Flask UI, and add a command-line tool.
+## 📖 Features
+- **Scraping:** Supports KSA, UAE, and Egypt domains.
+- **Data:** Extracts names, prices, links, images, and "Express" status.
+- **Export:** Save data as JSON or CSV via CLI or Web.
+- **Clean Code:** Separated logic for scraper, CLI# Noon Scraper
 
-## What it does
+A lightweight student project demonstrating web scraping, a Flask UI, and a developer-focused CLI tool.
 
-- Scrapes product listings from Noon by search query
-- Supports Saudi Arabia, UAE, and Egypt domains
-- Returns product name, price, link, image URL, and express delivery status
-- Includes a browser UI and a developer CLI
-- Lets you export results as CSV
+## 🚀 Live Demo
+**[Noon Scraper](https://noon-scraper.onrender.com)**  
+*Note: The live demo uses free hosting, so it is significantly slower than running the script locally. You can scrape products and download CSV results directly from the web interface.*
 
-## Project structure
+## 💻 CLI Usage (Recommended)
+The CLI is the most efficient way to use the scraper.
+```bash
+# Basic search
+python cli.py -q "laptop"
 
+# Save 4 pages of UAE results to a CSV file
+python cli.py -q "iPhone 15" -p 4 -c uae -o csv -f results.csv
+
+# Options:
+# -q, --query    Search term (Required)
+# -p, --pages    Pages to scrape (Default: 2, Max: 8)
+# -c, --country  saudi, uae, or egypt (Default: saudi)
+# -o, --output   json or csv (Default: json)
+# -f, --file     Filename to save output
 ```
-noon_web/
-├── scraper.py          # Core scraping logic
-├── app.py              # Flask web app and routes
-├── cli.py              # Developer CLI interface
-├── requirements.txt    # Python dependencies
-├── Procfile           # Hosting helper for tools like Heroku/Render
-├── .gitignore          # Ignored files in Git
-└── templates/
-    └── index.html      # Web UI template
-```
 
-## Setup and install
-
-1. Clone the repo:
+## 🛠️ Setup & Local Run
+1. **Install:**
    ```bash
-git clone <repository-url>
-cd noon_web
-```
+   git clone <repository-url>
+   cd noon_web
+   python -m venv .venv
+   source .venv/bin/activate  # Windows: .venv\Scripts\activate
+   pip install -r requirements.txt
+   ```
 
-2. Create a Python virtual environment:
+2. **Run Web UI Locally:**
    ```bash
-python -m venv .venv
-# Windows
-.venv\\Scripts\\activate
-# macOS / Linux
-source .venv/bin/activate
-```
+   python app.py
+   ```
+   Access at `http://127.0.0.1:5000`.
 
-3. Install the requirements:
-   ```bash
-pip install -r requirements.txt
-```
+## ☁️ Hosting Ready
+This repo is pre-configured for **Render**, Heroku, or Railway.
+- Includes a `Procfile` and `gunicorn` for production.
+- Detects `PORT` from environment variables automatically.
 
-## Run the web app locally
-
-```bash
-python app.py
-```
-
-Then open `http://127.0.0.1:5000` in your browser.
-
-## Hosting ready
-
-This project is ready for Python-friendly hosts like Heroku, Render, Railway, or Replit.
-
-- The app uses `PORT` from the environment when available
-- `requirements.txt` includes `gunicorn`
-- `Procfile` is provided for quick deployment
-
-### Run with Gunicorn
-
-```bash
-gunicorn app:app --bind 0.0.0.0:$PORT
-```
-
-## CLI usage
-
-For developers, the CLI is the easiest way to scrape without the web UI.
-
-```bash
-python cli.py --query "laptop" --pages 3 --country saudi --output json
-```
-
-### CLI options
-
-- `--query` or `-q` — search term (required)
-- `--pages` or `-p` — pages to scrape (default: 2, max: 8)
-- `--country` or `-c` — `saudi`, `uae`, or `egypt` (default: `saudi`)
-- `--output` or `-o` — `json` or `csv` (default: `json`)
-- `--file` or `-f` — save output to a file (optional)
-
-### CLI examples
-
-```bash
-# Simple search
-python cli.py -q "wireless headphones"
-
-# Save CSV results
-python cli.py -q "iPhone 15" -p 4 -c uae -o csv -f noon_laptops.csv
-
-# Save JSON to a file
-python cli.py -q "gaming mouse" -o json -f results.json
-
-# Get help
-python cli.py --help
-```
-
-## Using the scraper in Python
-
-If you want to use the scraper in your own script:
-
-```python
-from scraper import scrape_noon
-
-products = scrape_noon(query="laptop", pages=2, country="saudi")
-for product in products:
-    print(product)
-```
-
-## Notes for beginners
-
-This repo is meant to be a beginner project, so it is okay that it is small. It shows:
-
-- a separate scraper module
-- a Flask UI
-- a CLI interface
-- how to organize a simple Python project
-
-If this is your first repo, that is great! Keep it simple and clear.
+## 📖 Features
+- **Scraping:** Supports KSA, UAE, and Egypt domains.
+- **Data:** Extracts names, prices, links, images, and "Express" status.
+- **Export:** Save data as JSON or CSV via CLI or Web.
+- **Clean Code:** Separated logic for scraper, CLI, and Flask.
 
 ## License
-
 MIT License
+```
