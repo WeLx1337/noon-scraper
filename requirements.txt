@@ -1,0 +1,4 @@
+Flask
+curl-cffi
+beautifulsoup4
+gunicorn
