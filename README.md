@@ -55,7 +55,3 @@ This repo is pre-configured for **Render**, Heroku, or Railway.
 - **Data:** Extracts names, prices, links, images, and "Express" status.
 - **Export:** Save data as JSON or CSV via CLI or Web.
 - **Clean Code:** Separated logic for scraper, CLI, and Flask.
-
-## License
-MIT License
-```
