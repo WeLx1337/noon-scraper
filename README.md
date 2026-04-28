@@ -1,57 +1,144 @@
-A modular Python-based scraper designed to extract regional product data from Noon.com. This project demonstrates clean modular logic, featuring a robust CLI for developers and a lightweight Flask web interface for quick data exports.
+# 🔍 Noon Scraper
 
-## 📖 Features
-- **Scraping:** Supports KSA, UAE, and Egypt domains.
-- **Data:** Extracts names, prices, links, images, and "Express" status.
-- **Export:** Save data as JSON or CSV via CLI or Web.
-- **Clean Code:** Separated logic for scraper, CLI# Noon Scraper
-
-A lightweight student project demonstrating web scraping, a Flask UI, and a developer-focused CLI tool.
+A fast, modular Python scraper for [Noon.com](https://www.noon.com) — extracts product names, prices, images, links, and Express status across Saudi Arabia, UAE, and Egypt. Ships with a developer CLI and a clean Flask web UI.
 
 ## 🚀 Live Demo
-**[Noon Scraper](https://noon-scraper.onrender.com)**  
-*Note: The live demo uses free hosting, so it is significantly slower than running the script locally. You can scrape products and download CSV results directly from the web interface.*
 
-## 💻 CLI Usage (Recommended)
-The CLI is the most efficient way to use the scraper.
+**[noon-scraper.onrender.com](https://noon-scraper.onrender.com)**
+
+> ⚠️ Hosted on Render's free tier — first load may take ~30 seconds to spin up. For faster results, use the CLI locally.
+
+---
+
+## ✨ Features
+
+- 🌍 Supports **Saudi Arabia**, **UAE**, and **Egypt** domains
+- 🖼️ Extracts **name, price, image, link, and Express badge**
+- 📄 Multi-page scraping (up to 8 pages / ~400 products)
+- 📥 Export to **JSON or CSV** via CLI or Web UI
+- 🤖 **MCP Server** for LM Studio / Claude Desktop integration
+- 🧱 Clean modular architecture — scraper, CLI, and Flask are fully separated
+
+---
+
+## 💻 CLI (Recommended)
+
+The CLI is the fastest and most flexible way to use the scraper.
+
 ```bash
-# Basic search
+# Basic search (outputs JSON to terminal)
 python cli.py -q "laptop"
 
-# Save 4 pages of UAE results to a CSV file
+# Save 4 pages of UAE results as CSV
 python cli.py -q "iPhone 15" -p 4 -c uae -o csv -f results.csv
 
-# Options:
-# -q, --query    Search term (Required)
-# -p, --pages    Pages to scrape (Default: 2, Max: 8)
-# -c, --country  saudi, uae, or egypt (Default: saudi)
-# -o, --output   json or csv (Default: json)
-# -f, --file     Filename to save output
+# Saudi Arabia, 2 pages, JSON file
+python cli.py -q "rtx 5070" -p 2 -c saudi -o json -f rtx.json
 ```
 
-## 🛠️ Setup & Local Run
-1. **Install:**
-   ```bash
-   git clone <repository-url>
-   cd noon_web
-   python -m venv .venv
-   source .venv/bin/activate  # Windows: .venv\Scripts\activate
-   pip install -r requirements.txt
-   ```
+### CLI Options
 
-2. **Run Web UI Locally:**
-   ```bash
-   python app.py
-   ```
-   Access at `http://127.0.0.1:5000`.
+| Flag | Long | Description | Default |
+|------|------|-------------|---------|
+| `-q` | `--query` | Search term | *(required)* |
+| `-p` | `--pages` | Pages to scrape | `2` |
+| `-c` | `--country` | `saudi`, `uae`, or `egypt` | `saudi` |
+| `-o` | `--output` | `json` or `csv` | `json` |
+| `-f` | `--file` | Output filename | stdout |
 
-## ☁️ Hosting Ready
-This repo is pre-configured for **Render**, Heroku, or Railway.
-- Includes a `Procfile` and `gunicorn` for production.
-- Detects `PORT` from environment variables automatically.
+---
 
-## 📖 Features
-- **Scraping:** Supports KSA, UAE, and Egypt domains.
-- **Data:** Extracts names, prices, links, images, and "Express" status.
-- **Export:** Save data as JSON or CSV via CLI or Web.
-- **Clean Code:** Separated logic for scraper, CLI, and Flask.
+## 🤖 MCP Server (LM Studio / Claude Desktop)
+
+This project includes an MCP server that exposes the scraper as an AI tool, letting any MCP-compatible LLM search Noon products on demand.
+
+```bash
+python noon_mcp_server.py
+```
+
+Then add it to your LM Studio or Claude Desktop MCP config. The tool is called `search_noon_products` and accepts `query`, `country`, and `pages` arguments.
+
+---
+
+## 📦 Installation
+
+```bash
+git clone https://github.com/WeLx1337/noon-scraper.git
+cd noon-scraper
+python -m venv .venv
+
+# Activate (Linux/macOS)
+source .venv/bin/activate
+
+# Activate (Windows)
+.venv\Scripts\activate
+
+pip install -r requirements.txt
+```
+
+---
+
+## 🌐 Web UI (Local)
+
+Prefer a visual interface? Run the Flask app locally for full speed without cold starts.
+
+```bash
+python app.py
+```
+
+Open **http://127.0.0.1:5000** in your browser.
+
+- Search any product across KSA / UAE / Egypt
+- Sort and filter results in real time
+- Download results as a CSV file
+
+---
+
+## ☁️ Self-Hosting
+
+The repo is pre-configured for **Render**, **Railway**, and **Heroku**.
+
+Includes a `Procfile` using `gunicorn` and auto-detects the `PORT` environment variable.
+
+```
+web: gunicorn app:app --bind 0.0.0.0:$PORT
+```
+
+No additional configuration needed — just connect your repo and deploy.
+
+---
+
+## 🗂️ Project Structure
+
+```
+noon-scraper/
+├── scraper.py          # Core scraping logic (curl-cffi + BeautifulSoup)
+├── app.py              # Flask web app
+├── cli.py              # Developer CLI
+├── noon_mcp_server.py  # MCP server for AI tool use
+├── templates/
+│   └── index.html      # Web UI
+├── Procfile            # For Render / Heroku deployment
+└── requirements.txt
+```
+
+---
+
+## 🛠️ Tech Stack
+
+- **[curl-cffi](https://github.com/yifeikong/curl-cffi)** — browser impersonation to bypass bot detection
+- **[BeautifulSoup4](https://www.crummy.com/software/BeautifulSoup/)** — HTML parsing
+- **[Flask](https://flask.palletsprojects.com/)** — lightweight web server
+- **[FastMCP](https://github.com/jlowin/fastmcp)** — MCP server framework
+
+---
+
+## ⚠️ Disclaimer
+
+This project is built for educational purposes. Scraping websites may violate their Terms of Service. Use responsibly and check Noon's ToS before using in production.
+
+---
+
+## 📄 License
+
+MIT © [Abdullah](https://github.com/WeLx1337/)
