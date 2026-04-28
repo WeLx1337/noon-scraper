@@ -17,3 +17,6 @@ ENV/
 
 # Logs
 *.log
+
+#CVS 
+*.cvs
