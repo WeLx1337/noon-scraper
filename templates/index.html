@@ -627,6 +627,7 @@ async function startScrape() {
 
           if (event.type === 'done') {
             msgEl.textContent = event.message;
+            if (event.products) parsedProducts = event.products;
             if (event.pages_scraped < event.pages_requested) {
               detailsEl.textContent = `Requested ${event.pages_requested} pages, but only ${event.pages_scraped} pages were available; total products: ${event.total_products}.`;
             } else {
@@ -648,6 +649,7 @@ async function startScrape() {
         if (buffer.trim()) {
           try {
             const event = JSON.parse(buffer);
+            if (event.type === 'done' && event.products) parsedProducts = event.products;
             if (event.type === 'complete') parsedProducts = event.products;
             if (event.type === 'error') throw new Error(event.message || 'Scraping error');
           } catch (e) {

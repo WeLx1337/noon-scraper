@@ -164,7 +164,6 @@ def scrape_noon(query, pages=2, country="saudi", progress_callback=None):
                     })
                     continue
 
-            scraped_pages += 1
             report({
                 "type": "page_complete",
                 "page": page,
@@ -194,6 +193,7 @@ def scrape_noon(query, pages=2, country="saudi", progress_callback=None):
             "pages_scraped": scraped_pages,
             "total_products": len(all_products),
             "stopped_early": stopped_early,
+            "products": all_products,
             "message": f"Scraping completed: {len(all_products)} total products found."
         })
         
