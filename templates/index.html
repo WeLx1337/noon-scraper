@@ -650,7 +650,7 @@ async function startScrape() {
       }
     }
 
-    if (!parsedProducts) {
+    if (parsedProducts === null) {
       throw new Error('No product data received from scraper');
     }
 
