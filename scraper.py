@@ -31,8 +31,18 @@ def clean_price(raw):
         return None
 
 def scrape_noon(query, pages=2, country="saudi", progress_callback=None):
-    all_products = [] 
-    
+    all_products = []
+    scraped_pages = 0
+    stopped_early = False
+
+    def report(payload):
+        if not progress_callback:
+            return
+        if isinstance(payload, dict):
+            progress_callback(payload)
+        else:
+            progress_callback({"type": "info", "message": str(payload)})
+
     domain_map = {
         "saudi": "saudi-en",
         "uae": "uae-en",
@@ -42,25 +52,41 @@ def scrape_noon(query, pages=2, country="saudi", progress_callback=None):
     domain_path = domain_map.get(country, "saudi-en") 
 
     for page in range(1, pages + 1):
-        if progress_callback:
-            progress_callback(f"Starting page {page}/{pages}...")
-        
+        report({
+            "type": "page_start",
+            "page": page,
+            "pages": pages,
+            "message": f"Starting page {page}/{pages}..."
+        })
+
         url = f"https://www.noon.com/{domain_path}/search/?q={query}&page={page}"
         try:
             r = cf_requests.get(url, headers=HEADERS, impersonate="chrome", timeout=20)
             if r.status_code != 200:
-                if progress_callback:
-                    progress_callback(f"Page {page} returned status {r.status_code}, stopping...")
+                report({
+                    "type": "stop_early",
+                    "page": page,
+                    "pages": pages,
+                    "message": f"Page {page} returned status {r.status_code}; stopping early."
+                })
+                stopped_early = True
                 break
             
             soup = BeautifulSoup(r.text, "html.parser")
             cards = soup.find_all(attrs={"data-qa": "plp-product-box"})
             
             if not cards:
-                if progress_callback:
-                    progress_callback(f"No products found on page {page}, stopping...")
+                report({
+                    "type": "stop_early",
+                    "page": page,
+                    "pages": pages,
+                    "pages_scraped": scraped_pages,
+                    "total_products": len(all_products),
+                    "message": f"No products found on page {page}; stopping early after page {scraped_pages}."
+                })
+                stopped_early = True
                 break
-                
+
             page_products = 0
             for card in cards:
                 name_el  = card.find(attrs={"data-qa": "plp-product-box-name"})
@@ -100,20 +126,50 @@ def scrape_noon(query, pages=2, country="saudi", progress_callback=None):
                         "express": express,
                     })
                     page_products += 1
-                    page_products += 1
             
-            if progress_callback:
-                progress_callback(f"Page {page}/{pages} completed: found {page_products} products (total: {len(all_products)})")
-                
+            if page_products == 0:
+                report({
+                    "type": "stop_early",
+                    "page": page,
+                    "pages": pages,
+                    "pages_scraped": scraped_pages,
+                    "total_products": len(all_products),
+                    "message": f"Page {page} had no valid products; stopping early after page {scraped_pages}."
+                })
+                stopped_early = True
+                break
+
+            scraped_pages += 1
+            report({
+                "type": "page_complete",
+                "page": page,
+                "pages": pages,
+                "page_products": page_products,
+                "total_products": len(all_products),
+                "message": f"Page {page}/{pages} completed: found {page_products} products (total: {len(all_products)})."
+            })
+
         except Exception as e:
-            if progress_callback:
-                progress_callback(f"Error on page {page}: {e}")
+            report({
+                "type": "error",
+                "page": page,
+                "pages": pages,
+                "message": f"Error on page {page}: {e}"
+            })
+            stopped_early = True
             break
         
         # Friendly reminder to stay below the radar
         time.sleep(1.2)
         
     if progress_callback:
-        progress_callback(f"Scraping completed: {len(all_products)} total products found")
+        report({
+            "type": "done",
+            "pages_requested": pages,
+            "pages_scraped": scraped_pages,
+            "total_products": len(all_products),
+            "stopped_early": stopped_early,
+            "message": f"Scraping completed: {len(all_products)} total products found."
+        })
         
     return all_products

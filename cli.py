@@ -66,7 +66,10 @@ def main():
 
     # Progress callback function
     def progress_callback(message):
-        print(f"[INFO] {message}", file=sys.stderr)
+        if isinstance(message, dict):
+            print(f"[INFO] {message.get('message', message)}", file=sys.stderr)
+        else:
+            print(f"[INFO] {message}", file=sys.stderr)
 
     # Scrape the products
     print(f"Starting scrape for '{args.query}' from {args.country} domain ({args.pages} pages)...", file=sys.stderr)

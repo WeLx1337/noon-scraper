@@ -239,8 +239,16 @@
       background: var(--bg-card);
       border: 1px solid var(--border);
       border-radius: 16px;
-      overflow: hidden;
+      overflow: visible;
       box-shadow: var(--shadow);
+    }
+
+    .product-img-wrapper {
+      position: relative;
+      width: 70px;
+      height: 70px;
+      flex-shrink: 0;
+      overflow: visible;
     }
 
     table {
@@ -299,17 +307,18 @@
 
     .product-img-popup {
       display: none;
-      position: absolute;
-      top: -10px;
-      left: 78px;
-      width: min(450px, 50vw);
-      max-height: 70vh;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: min(420px, 72vw);
+      max-height: 80vh;
       padding: 12px;
       background: var(--bg-card);
       border: 1px solid var(--border);
       border-radius: 16px;
       box-shadow: var(--shadow-hover);
-      z-index: 200;
+      z-index: 999;
     }
 
     .product-img-popup img {
@@ -320,7 +329,9 @@
       border-radius: 12px;
     }
 
-    .product-img-wrapper:hover .product-img-popup {
+    .product-img-wrapper:hover .product-img-popup,
+    .product-img-wrapper:active .product-img-popup,
+    .product-img-wrapper:focus-within .product-img-popup {
       display: block;
     }
 
@@ -430,6 +441,16 @@
       th, td { padding: 10px 12px; font-size: 12px; }
       .product-img-wrapper { width: 50px; height: 50px; }
       .product-name { font-size: 12px; }
+
+      .product-img-popup {
+        width: min(320px, 90vw);
+        max-height: 70vh;
+        padding: 10px;
+      }
+
+      .product-img-popup img {
+        max-height: 65vh;
+      }
     }
   </style>
 </head>
@@ -459,7 +480,14 @@
       <select id="pages">
         <option value="1">1 page (~50)</option>
         <option value="2" selected>2 pages (~100)</option>
+        <option value="3">3 pages (~150)</option>
         <option value="4">4 pages (~200)</option>
+        <option value="5">5 pages (~250)</option>
+        <option value="6">6 pages (~300)</option>
+        <option value="7">7 pages (~350)</option>
+        <option value="8">8 pages (~400)</option>
+        <option value="9">9 pages (~450)</option>
+        <option value="10">10 pages (~500)</option>
       </select>
     </div>
     <!-- Cleaned up actions area -->
@@ -476,6 +504,7 @@
       <div><div class="spinner"></div></div>
       <div>Scraping Noon...</div>
       <div class="msg" id="loading-msg">This takes 10–30 seconds depending on pages</div>
+      <div class="msg" id="loading-details"></div>
     </div>
   </div>
 
@@ -544,39 +573,100 @@ async function startScrape() {
   document.getElementById('scrape').disabled = true;
   document.getElementById('scrape').textContent = 'Scraping...';
 
-  const msgs = ['Fetching page 1...', 'Fetching page 2...', 'Almost done...', 'Parsing results...'];
-  let msgIdx = 0;
   const msgEl = document.getElementById('loading-msg');
-  const msgInterval = setInterval(() => {
-    msgEl.textContent = msgs[Math.min(msgIdx++, msgs.length - 1)];
-  }, 5000);
+  const detailsEl = document.getElementById('loading-details');
+  msgEl.textContent = 'Preparing to scrape...';
+  detailsEl.textContent = '';
 
   try {
     const res = await fetch(`/search?q=${encodeURIComponent(query)}&pages=${pages}&country=${country}`);
-    const data = await res.json();
+    if (!res.ok) {
+      const errorText = await res.text();
+      throw new Error(errorText || 'Scraping failed');
+    }
 
-    clearInterval(msgInterval);
-    document.getElementById('loading').style.display = 'none';
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+    let parsedProducts = null;
 
-    if (data.error) throw new Error(data.error);
+    while (true) {
+      const { done, value } = await reader.read();
+      if (value) {
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop();
 
-    allProducts = data.products;
+        for (const line of lines) {
+          if (!line.trim()) continue;
+          let event;
+          try {
+            event = JSON.parse(line);
+          } catch (e) {
+            continue;
+          }
+
+          if (event.type === 'page_start') {
+            msgEl.textContent = event.message;
+            detailsEl.textContent = `Fetching page ${event.page} of ${event.pages}...`;
+          }
+
+          if (event.type === 'page_complete') {
+            msgEl.textContent = event.message;
+            detailsEl.textContent = `Page ${event.page} scraped ${event.page_products} products; total ${event.total_products}.`;
+          }
+
+          if (event.type === 'stop_early') {
+            msgEl.textContent = event.message;
+            detailsEl.textContent = `Total scraped: ${event.total_products} products across ${event.pages_scraped} pages.`;
+          }
+
+          if (event.type === 'done') {
+            msgEl.textContent = event.message;
+            detailsEl.textContent = `Pages requested: ${event.pages_requested}; pages scraped: ${event.pages_scraped}; total products: ${event.total_products}.`;
+          }
+
+          if (event.type === 'complete') {
+            parsedProducts = event.products;
+          }
+
+          if (event.type === 'error') {
+            throw new Error(event.message || 'Scraping error');
+          }
+        }
+      }
+
+      if (done) {
+        if (buffer.trim()) {
+          try {
+            const event = JSON.parse(buffer);
+            if (event.type === 'complete') parsedProducts = event.products;
+            if (event.type === 'error') throw new Error(event.message || 'Scraping error');
+          } catch (e) {
+            // ignore leftover parse issues
+          }
+        }
+        break;
+      }
+    }
+
+    if (!parsedProducts) {
+      throw new Error('No product data received from scraper');
+    }
+
+    allProducts = parsedProducts;
     document.getElementById('results-section').style.display = 'block';
-    
-    // Show download button
     const dlBtn = document.getElementById('download');
-    if(dlBtn) dlBtn.style.display = 'inline-block';
-    
+    if (dlBtn) dlBtn.style.display = 'inline-block';
     document.getElementById('price-header').innerHTML = `Price (${currentCurrency})`;
     renderTable();
 
   } catch (err) {
-    clearInterval(msgInterval);
-    document.getElementById('loading').style.display = 'none';
     const errEl = document.getElementById('error');
     errEl.textContent = 'Error: ' + err.message;
     errEl.style.display = 'block';
   } finally {
+    document.getElementById('loading').style.display = 'none';
     document.getElementById('scrape').disabled = false;
     document.getElementById('scrape').textContent = 'Scrape';
   }
