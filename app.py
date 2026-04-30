@@ -19,7 +19,7 @@ def index():
 @app.route('/search')
 def search():
     query_raw = request.args.get('q', '').strip()
-    pages = max(1, min(int(request.args.get('pages', 2)), 7))
+    pages = max(1, min(int(request.args.get('pages', 2)), 10))
     country = request.args.get('country', 'saudi').strip()
 
     if not query_raw:

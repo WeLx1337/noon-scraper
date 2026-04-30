@@ -75,6 +75,7 @@ def scrape_noon(query, pages=2, country="saudi", progress_callback=None):
             
             soup = BeautifulSoup(r.text, "html.parser")
             cards = soup.find_all(attrs={"data-qa": "plp-product-box"})
+            scraped_pages += 1
             
             if not cards:
                 consecutive_no_products += 1

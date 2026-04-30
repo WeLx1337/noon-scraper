@@ -485,6 +485,9 @@
         <option value="5">5 pages (~250)</option>
         <option value="6">6 pages (~300)</option>
         <option value="7">7 pages (~350)</option>
+        <option value="8">8 pages (~400)</option>
+        <option value="9">9 pages (~450)</option>
+        <option value="10">10 pages (~500)</option>
       </select>
     </div>
     <!-- Cleaned up actions area -->
@@ -615,12 +618,20 @@ async function startScrape() {
 
           if (event.type === 'stop_early') {
             msgEl.textContent = event.message;
-            detailsEl.textContent = `Total scraped: ${event.total_products} products across ${event.pages_scraped} pages.`;
+            if (event.pages_scraped < event.pages) {
+              detailsEl.textContent = `Stopped early after ${event.pages_scraped} pages because later pages had no products.`;
+            } else {
+              detailsEl.textContent = `Total scraped: ${event.total_products} products across ${event.pages_scraped} pages.`;
+            }
           }
 
           if (event.type === 'done') {
             msgEl.textContent = event.message;
-            detailsEl.textContent = `Pages requested: ${event.pages_requested}; pages scraped: ${event.pages_scraped}; total products: ${event.total_products}.`;
+            if (event.pages_scraped < event.pages_requested) {
+              detailsEl.textContent = `Requested ${event.pages_requested} pages, but only ${event.pages_scraped} pages were available; total products: ${event.total_products}.`;
+            } else {
+              detailsEl.textContent = `Pages scraped: ${event.pages_scraped}; total products: ${event.total_products}.`;
+            }
           }
 
           if (event.type === 'complete') {
