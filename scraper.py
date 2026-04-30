@@ -34,6 +34,7 @@ def scrape_noon(query, pages=2, country="saudi", progress_callback=None):
     all_products = []
     scraped_pages = 0
     stopped_early = False
+    consecutive_no_products = 0
 
     def report(payload):
         if not progress_callback:
@@ -61,7 +62,7 @@ def scrape_noon(query, pages=2, country="saudi", progress_callback=None):
 
         url = f"https://www.noon.com/{domain_path}/search/?q={query}&page={page}"
         try:
-            r = cf_requests.get(url, headers=HEADERS, impersonate="chrome", timeout=20)
+            r = cf_requests.get(url, headers=HEADERS, impersonate="chrome", timeout=15)
             if r.status_code != 200:
                 report({
                     "type": "stop_early",
@@ -76,16 +77,28 @@ def scrape_noon(query, pages=2, country="saudi", progress_callback=None):
             cards = soup.find_all(attrs={"data-qa": "plp-product-box"})
             
             if not cards:
-                report({
-                    "type": "stop_early",
-                    "page": page,
-                    "pages": pages,
-                    "pages_scraped": scraped_pages,
-                    "total_products": len(all_products),
-                    "message": f"No products found on page {page}; stopping early after page {scraped_pages}."
-                })
-                stopped_early = True
-                break
+                consecutive_no_products += 1
+                if consecutive_no_products >= 2:
+                    report({
+                        "type": "stop_early",
+                        "page": page,
+                        "pages": pages,
+                        "pages_scraped": scraped_pages,
+                        "total_products": len(all_products),
+                        "message": f"No products found on page {page} (2nd consecutive); stopping early after page {scraped_pages}."
+                    })
+                    stopped_early = True
+                    break
+                else:
+                    report({
+                        "type": "info",
+                        "page": page,
+                        "pages": pages,
+                        "message": f"No products found on page {page}; continuing..."
+                    })
+                    continue
+            else:
+                consecutive_no_products = 0
 
             page_products = 0
             for card in cards:
@@ -128,16 +141,27 @@ def scrape_noon(query, pages=2, country="saudi", progress_callback=None):
                     page_products += 1
             
             if page_products == 0:
-                report({
-                    "type": "stop_early",
-                    "page": page,
-                    "pages": pages,
-                    "pages_scraped": scraped_pages,
-                    "total_products": len(all_products),
-                    "message": f"Page {page} had no valid products; stopping early after page {scraped_pages}."
-                })
-                stopped_early = True
-                break
+                # This shouldn't happen since we check cards, but just in case
+                consecutive_no_products += 1
+                if consecutive_no_products >= 2:
+                    report({
+                        "type": "stop_early",
+                        "page": page,
+                        "pages": pages,
+                        "pages_scraped": scraped_pages,
+                        "total_products": len(all_products),
+                        "message": f"Page {page} had no valid products (2nd consecutive); stopping early after page {scraped_pages}."
+                    })
+                    stopped_early = True
+                    break
+                else:
+                    report({
+                        "type": "info",
+                        "page": page,
+                        "pages": pages,
+                        "message": f"Page {page} had no valid products; continuing..."
+                    })
+                    continue
 
             scraped_pages += 1
             report({
