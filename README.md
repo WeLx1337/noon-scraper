@@ -4,7 +4,7 @@ A fast, modular Python scraper for [Noon.com](https://www.noon.com) — extracts
 
 ## 🚀 Live Demo
 
-**[noon-scraper.onrender.com](https://noon-scraper.onrender.com)**
+**[noon-scraper.onrender.com](noon-scraper-lqw6.onrender.com/)**
 
 > ⚠️ Hosted on Render's free tier — first load may take ~30 seconds to spin up. For faster results, use the CLI locally.
 
